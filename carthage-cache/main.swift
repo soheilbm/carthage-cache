@@ -23,19 +23,54 @@ struct Debugger {
 }
 
 struct Arguments {
+    var help: Bool = true
+    var verbose: Bool = false
     var carthagePath: String?
     var cachePath: String?
+    var xcodeVersion: String?
+    var swiftVersion: String?
+    var shellEnvironment: String?
     
+    init?(_ args:Array<String>) {
+        if let _ = args.index(of: "help") {
+            Arguments.showHelp() ;
+        }
+        
+        if let _ = args.index(of: "version") {
+            
+        }
+        
+        return nil
+    }
     
+    static func invalidArgument() {
+        Debugger.printout(str: "Unrecognized command: \(CommandLine.arguments.dropFirst().joined())", type: .error)
+    }
+    
+    static func showHelp() {
+        Debugger.printout(str: "Available Commands:", type: .success)
+        Debugger.printout(str: "  help          Display general build commands and options")
+        Debugger.printout(str: "  build         Copy framework from cache or build a new one if doesn't exist")
+        Debugger.printout(str: "  version       Display current version\n")
+        
+        Debugger.printout(str: "Options:", type: .success)
+        Debugger.printout(str: "  -r            Path to Carthage resolve file (by default uses current directory).")
+        Debugger.printout(str: "  -c            Path to caching directory (by default it will store into ~/Library/Caches/carthage-cache).")
+        Debugger.printout(str: "  -x            XCode version (by default uses `gcc --version`)")
+        Debugger.printout(str: "  -l            Swift version (by default uses `swift -v`)")
+        Debugger.printout(str: "  -s            Shell environment (by default will use /usr/bin/env)")
+        Debugger.printout(str: "  -f            Force to rebuild and copy to caching directory")
+        Debugger.printout(str: "  -v            Verbose mode\n")
+    }
 }
 
-class main {
-    @discardableResult func run(args : String..., verbose: Bool = false) -> (output: [String], error: [String], exitCode: Int32) {
+struct main {
+    @discardableResult func run(launchPath: String = "/usr/bin/env", verbose: Bool = true, args : String...) -> (output: [String], error: [String], exitCode: Int32) {
         var output : [String] = []
         var error : [String] = []
         
         let task = Process()
-        task.launchPath = "/usr/bin/env"
+        task.launchPath = launchPath
         task.arguments = args
         
         let outpipe = Pipe()
@@ -90,11 +125,13 @@ class main {
     }
     
     init(args:Array<String>) {
+        guard let _ = Arguments(args) else {
+            Arguments.invalidArgument()
+            return
+        }
         
+        print("C")
     }
 }
 
-let me = main(args: CommandLine.arguments)
-me.run(args: "ls","-la")
-print("\u{001B}[0;31myellow")
-//me.run(args: "carthage","update","--project-directory","Test")
+_ = main(args: CommandLine.arguments)
