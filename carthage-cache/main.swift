@@ -9,6 +9,10 @@
 
 import Foundation
 
+// Constants
+let kCartfileResolved = "Cartfile.resolved"
+let kCarthageCacheDir = "carthage-cache"
+
 struct Debugger {
     enum PrintType: String {
         case standard = "\u{001B}[0;37m"
@@ -109,20 +113,26 @@ struct File {
     }
 }
 
+struct Library {
+    let name: String
+    let version: String
+}
+
 struct Arguments {
     var verbose: Bool = false
     var force: Bool = false
     var carthagePath: String
     var xcodeVersion: String?
     var swiftVersion: String?
+    var platform: String = "iOS"
     var shellEnvironment: String = "/usr/bin/env"
+    var libraries: [Library]?
     
     init?(_ args:Array<String>) {
         var newArgs = args.dropFirst()
         if let _ = newArgs.index(of: "help") {
             Arguments.showHelp();
             return nil
-            
         }
         
         if let _ = newArgs.index(of: "version") {
@@ -162,7 +172,7 @@ struct Arguments {
         if let index = newArgs.index(of: "-r"), let i = newArgs.index(index, offsetBy: 1, limitedBy: 1) {
             var path = newArgs[i]
             
-            if let last = path.components(separatedBy: "Cartfile.resolved").first {
+            if let last = path.components(separatedBy: kCartfileResolved).first {
                 path = last
             }
             
@@ -198,7 +208,7 @@ struct Arguments {
     
     static func cacheDirExist() -> Bool {
         let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let dataPath = documentsDirectory.appendingPathComponent("carthage-cache")
+        let dataPath = documentsDirectory.appendingPathComponent(kCarthageCacheDir)
         
         return File.createDir(dataPath)
     }
@@ -208,10 +218,10 @@ struct Arguments {
     }
     
     static func resolveFileExist(path: String) -> Bool {
-        let newPath = path + "/Cartfile.resolved"
+        let newPath = path + "/\(kCartfileResolved)"
 
         if File.exists(path: newPath) == false {
-            Debugger.printout("Wrong path to Cartfile.resolve!\n", type: .error)
+            Debugger.printout("Wrong path to \(kCartfileResolved)!\n", type: .error)
             return false
         }
         
@@ -229,7 +239,7 @@ struct Arguments {
         Debugger.printout("  version       Display current version\n")
         
         Debugger.printout("Options:", type: .success)
-        Debugger.printout("  -r            Path to directory where Cartfile.resolved exists (by default uses current directory).")
+        Debugger.printout("  -r            Path to directory where \(kCartfileResolved) exists (by default uses current directory).")
         Debugger.printout("  -x            XCode version (by default uses `gcc --version`)")
         Debugger.printout("  -l            Swift version (by default uses `xcrun swift -version`)")
         Debugger.printout("  -s            Shell environment (by default will use /usr/bin/env)")
@@ -242,7 +252,8 @@ struct main {
     init(args:Array<String>) {
         guard let _ = Arguments(args) else {return}
         
-//        Command.run(launchPath: newArgument.shellEnvironment, verbose: newArgument.verbose, args: "carthage","update")
+        
+//      Command.run(launchPath: newArgument.shellEnvironment, verbose: newArgument.verbose, args: "carthage","update")
     }
 }
 
