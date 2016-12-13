@@ -14,6 +14,7 @@ let kCartfile         = "Cartfile"
 let kCarthage         = "Carthage"
 let kCartfileResolved = "Cartfile.resolved"
 let kCarthageCacheDir = "carthage-cache"
+let kVersion          = "v0.1.7"
 
 struct Debugger {
     enum PrintType: String {
@@ -170,14 +171,9 @@ struct Arguments {
         }
         
         if let _ = newArgs.index(of: "version") {
-            let (v,_,_) = Command.run(args: "git","describe", "--abbrev=0", "--tags")
             
-            if let gitVersion = v.first {
-                let version = "Current version: \(gitVersion)\n"
-                Debugger.printout(version, type: Debugger.PrintType.success)
-            }else{
-                Debugger.printout("Something went wrong!", type: Debugger.PrintType.error)
-            }
+            let version = "Current version: \(kVersion)\n"
+            Debugger.printout(version, type: Debugger.PrintType.success)
             
             return nil
         }
@@ -330,7 +326,7 @@ struct Arguments {
     }
     
     func fetchGitLibraries() {
-        Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage","checkout")
+        Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage","checkout","--no-use-binaries")
     }
     
     func copyToCache(_ libraries: Set<Library>) {
@@ -339,7 +335,7 @@ struct Arguments {
             File.remove(path: newPath)
             
             Debugger.printout("Building library \(i.name)")
-            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "build","\(i.name)","--no-use-binaries","--platform","ios")
+            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "build","\(i.name)","--platform","ios")
     
             let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name
