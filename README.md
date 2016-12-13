@@ -1,22 +1,29 @@
-# Carthage Cache (beta)
-Alternate solution for Carthage Caching.
+# Carthage Cache 
+Alternate solution for Carthage Caching. Carthage-cache needs ***Cartfile.resolve*** in order to work.
 
 ### Installation
 
 #### Git Clone Option
-`git clone git@github.com:soheilbm/carthage-cache.git`
+```bash
+git clone git@github.com:soheilbm/carthage-cache.git
+cd carthage-cache
+chmod +x carthage-cache/main.swift
+make install copy clean
+```
 
-`cd carthage-cache`
+#### Brew Option
+This option requires to use the latest version of XCode.
 
-`chmod +x carthage-cache/main.swift`
-
-`make install copy clean`
+```bash
+brew tap soheilbm/formulae
+brew install soheilbm/formulae/carthage-cache
+```
 
 - - -
 
 ### Commands
-``` bash
-./carthage-cache help
+```bash
+carthage-cache build -v
 ```
 
 - **help**     *Display general build commands and options*
