@@ -1,5 +1,5 @@
 # Carthage Cache 
-Alternate solution for Carthage Caching.
+Alternate solution for Carthage Caching. Carthage-cache needs ***Cartfile.resolve*** in order to work.
 
 ### Installation
 
