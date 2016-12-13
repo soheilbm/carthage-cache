@@ -5,7 +5,7 @@ Alternate solution for Carthage Caching.
 
 #### Git Clone Option
 ```bash
-git clone git@github.com:soheilbm/carthage-cache.git`
+git clone git@github.com:soheilbm/carthage-cache.git
 cd carthage-cache
 chmod +x carthage-cache/main.swift
 make install copy clean
