@@ -1,3 +1,4 @@
 github "soheilbm/AES256Encrypter" "0.0.5"
 github "soheilbm/Firebase" "3.7.1"
 github "marketplacer/keychain-swift" "7.0.0"
+git "git@github.com:propertyguru/PGNetworkSDK.git" "0.9.19"

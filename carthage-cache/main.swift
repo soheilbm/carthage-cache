@@ -10,6 +10,8 @@
 import Foundation
 
 // Constants
+let kCartfile         = "Cartfile"
+let kCarthage         = "Carthage"
 let kCartfileResolved = "Cartfile.resolved"
 let kCarthageCacheDir = "carthage-cache"
 
@@ -96,6 +98,16 @@ struct File {
         }
     }
     
+    static func createDir(_ dataPath: String) -> Bool {
+        do {
+            try FileManager.default.createDirectory(atPath: dataPath, withIntermediateDirectories: true, attributes: nil)
+            return true
+        } catch let error as NSError {
+            Debugger.printout("Error creating directory: \(error.localizedDescription)", type: Debugger.PrintType.error)
+            return false
+        }
+    }
+    
     static func exists (path: String) -> Bool {
         return FileManager.default.fileExists(atPath: path)
     }
@@ -111,19 +123,41 @@ struct File {
     static func write (path: String, content: String, encoding: String.Encoding = String.Encoding.utf8) -> Bool {
         return ((try? content.write(toFile: path, atomically: true, encoding: encoding)) != nil) ?true :false
     }
+    
+    static func remove (path: String) {
+        try? FileManager.default.removeItem(atPath: path)
+    }
+    
+    static func copy (path: String, toPath: String) -> Bool {
+        do {
+            try FileManager.default.moveItem(atPath: path, toPath: toPath)
+            return true
+        } catch let error as NSError {
+            Debugger.printout("Error copying : \(error.localizedDescription)", type: Debugger.PrintType.error)
+            return false
+        }
+    }
 }
 
-struct Library {
+struct Library: Hashable {
     let name: String
     let version: String
+    
+    var hashValue: Int {
+        return name.hashValue ^ version.hashValue
+    }
+    
+    static func == (lhs: Library, rhs: Library) -> Bool {
+        return lhs.name == rhs.name && lhs.version == rhs.version
+    }
 }
 
 struct Arguments {
     var verbose: Bool = false
     var force: Bool = false
     var carthagePath: String
-    var xcodeVersion: String?
-    var swiftVersion: String?
+    var xcodeVersion: String = "8.0.0"
+    var swiftVersion: String = "3.0"
     var platform: String = "iOS"
     var shellEnvironment: String = "/usr/bin/env"
     var libraries: [Library]?
@@ -199,22 +233,142 @@ struct Arguments {
             newArgs.remove(at: index)
         }
         
-        guard Arguments.resolveFileExist(path: carthagePath) == true,
-            Arguments.cacheDirExist() else {
-            return nil
+        
+        if Arguments.resolveFileExist(path: carthagePath) == false {
+            Arguments.updateAllLibraries()
         }
         
+        if Arguments.cacheDirExist("iOS",swiftVersion: "3.0", xcodeVersion: "8.0.0") == false {
+            return nil
+        }
     }
     
-    static func cacheDirExist() -> Bool {
+    static func updateAllLibraries() {
+        Command.run(args: "carthage", "update","--platform","ios")
+    }
+    
+    func getLibrariesFromCartfileResolve() -> [Library] {
+        let newPath = carthagePath + "/\(kCartfileResolved)"
+        
+        if let file = File.read(path: newPath){
+            let lines = file.components(separatedBy: "\n")
+            
+            
+            return lines.flatMap {
+                let options = $0.components(separatedBy: " ")
+                guard options.count == 3 else { return nil }
+                let paths = options[1].components(separatedBy: ":")
+                let repoPath = paths.count == 2 ? paths[1] : paths[0]
+                var name = repoPath.replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: ".git", with: "")
+                let tag = options[2].replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: ".git", with: "")
+                
+                name = name.components(separatedBy: "/")[1]
+                
+                return Library.init(name: name, version: tag)
+            }
+        }
+        
+        return []
+    }
+
+    func getLibrariesNameFromCartfile() -> [String] {
+        let newPath = carthagePath + "/\(kCartfile)"
+        
+        if let file = File.read(path: newPath){
+            let lines = file.components(separatedBy: "\n")
+            
+            
+            return lines.flatMap {
+                let options = $0.components(separatedBy: " ")
+                guard options.count >= 2 else { return nil }
+                let paths = options[1].components(separatedBy: ":")
+                let repoPath = paths.count == 2 ? paths[1] : paths[0]
+                var name = repoPath.replacingOccurrences(of: "\"", with: "")
+                
+                name = name.replacingOccurrences(of: ".git", with: "")
+                name = name.replacingOccurrences(of: "//", with: "")
+                name = name.replacingOccurrences(of: "github.com/", with: "")
+                name = name.components(separatedBy: "/")[1]
+                
+                return name
+            }
+        }
+        
+        return []
+    }
+
+    
+    func getLibraryFromCache() -> [Library] {
         let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let dataPath = documentsDirectory.appendingPathComponent(kCarthageCacheDir)
+        let packagePath = "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform
+        let path = kCarthageCacheDir + "/" + packagePath
+        let dataPath = documentsDirectory.appendingPathComponent(path)
+        var libraries = [Library]()
+        
+        if let e = FileManager.default.enumerator(at: dataPath, includingPropertiesForKeys: [kCFURLIsDirectoryKey as URLResourceKey], options: FileManager.DirectoryEnumerationOptions.skipsSubdirectoryDescendants, errorHandler: nil) {
+            
+            for i in e {
+                if let m = FileManager.default.enumerator(at: i as! URL, includingPropertiesForKeys: [kCFURLIsDirectoryKey as URLResourceKey], options: FileManager.DirectoryEnumerationOptions.skipsSubdirectoryDescendants, errorHandler: nil) {
+                    for x in m {
+                        if let name = x as? URL {
+                            let options = name.absoluteString.components(separatedBy: packagePath + "/")[1]
+                            var array = options.components(separatedBy: "/")
+                            
+                            if let index = array.index(of: "") { array.remove(at: index) }
+                            if let index = array.index(of: ".DS_Store") { array.remove(at: index) }
+                            
+                            if array.count >= 2 {
+                                libraries.append(Library(name: array[0], version: array[1]))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return libraries
+    }
+    
+    func copyToCache(_ libraries: Set<Library>) {
+        for i in libraries {
+            let newPath = carthagePath + "/\(kCarthage)/Build/iOS"
+            File.remove(path: newPath)
+            
+            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "build","\(i.name)","--platform","ios")
+    
+            let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name
+            let dataPath = documentsDirectory.appendingPathComponent(path)
+            let pathWithVersion = dataPath.appendingPathComponent(i.version).absoluteString.replacingOccurrences(of: "file://", with: "")
+            
+            let _ = File.remove(path: pathWithVersion)
+            let _ = File.createDir(dataPath)
+            
+            let _ = File.copy(path: newPath, toPath: pathWithVersion)
+        }
+    }
+    
+    func copyFromCacheToCarthage(_ libraries: Set<Library>) {
+        let newPath = carthagePath + "/\(kCarthage)/Build/iOS"
+        File.remove(path: newPath)
+        let _ = File.createDir(newPath)
+        
+        for i in libraries {
+            let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name + "/" + i.version + "/."
+            let dataPath = documentsDirectory.appendingPathComponent(path)
+            let pathWithVersion = dataPath.absoluteString.replacingOccurrences(of: "file://", with: "")
+            
+            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "cp","-rf",pathWithVersion,newPath)
+        }
+    }
+    
+    static func cacheDirExist(_ platform: String, swiftVersion: String, xcodeVersion: String) -> Bool {
+        let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform
+        let dataPath = documentsDirectory.appendingPathComponent(path)
         
         return File.createDir(dataPath)
-    }
-    
-    static func checkCarthagebuildExist() -> Bool {
-        return false
     }
     
     static func resolveFileExist(path: String) -> Bool {
@@ -229,7 +383,8 @@ struct Arguments {
     }
     
     static func invalidArgument() {
-        Debugger.printout("Unrecognized command: \(CommandLine.arguments.dropFirst().joined())\n", type: .error)
+        Debugger.printout("Unrecognized command: \(CommandLine.arguments.dropFirst().joined())", type: .error)
+        Debugger.printout("Use `help` to show available commands.", type: .standard)
     }
     
     static func showHelp() {
@@ -240,8 +395,8 @@ struct Arguments {
         
         Debugger.printout("Options:", type: .success)
         Debugger.printout("  -r            Path to directory where \(kCartfileResolved) exists (by default uses current directory).")
-        Debugger.printout("  -x            XCode version (by default uses `gcc --version`)")
-        Debugger.printout("  -l            Swift version (by default uses `xcrun swift -version`)")
+        Debugger.printout("  -x            XCode version (by default uses `llvm-gcc -v`). e.g 8.0.0")
+        Debugger.printout("  -l            Swift version (by default uses `xcrun swift -version`). e.g 3.0")
         Debugger.printout("  -s            Shell environment (by default will use /usr/bin/env)")
         Debugger.printout("  -f            Force to rebuild and copy to caching directory")
         Debugger.printout("  -v            Verbose mode\n")
@@ -250,10 +405,14 @@ struct Arguments {
 
 struct main {
     init(args:Array<String>) {
-        guard let _ = Arguments(args) else {return}
+        guard let arguments = Arguments(args) else {return}
+        let cartFiles = Set(arguments.getLibrariesFromCartfileResolve())
+        let cacheFiles = Set(arguments.getLibraryFromCache())
         
+        let missingCachFiles = cartFiles.subtracting(cacheFiles)
         
-//      Command.run(launchPath: newArgument.shellEnvironment, verbose: newArgument.verbose, args: "carthage","update")
+        arguments.copyToCache(missingCachFiles)
+        arguments.copyFromCacheToCarthage(cartFiles)
     }
 }
 
