@@ -1,5 +1,5 @@
 ## Carthage Cache
-Alternate solution for carthage cashing.
+Alternate solution for Carthage Caching.
 
 #### Installation
 ##### Homebrew Option
