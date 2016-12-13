@@ -1,0 +1,6 @@
+{
+  "name": "Carthage-cache",
+  "tagline": "Alternate solution for carthage cashing ",
+  "body": "### Carthage-Cache\r\n\r\nA simple library for caching carthage libraries.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
