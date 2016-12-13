@@ -12,11 +12,6 @@ Alternate solution for Carthage Caching.
 
 `make install copy clean`
 
-#### Homebrew Option
-`brew tap soheilbm/formulae`
-
-`brew install soheilbm/formulae/carthage-cache`
-
 - - -
 
 ### Commands
