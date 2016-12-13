@@ -12,6 +12,14 @@ Alternate solution for Carthage Caching.
 
 `make install copy clean`
 
+
+#### Brew Option
+This option requires to use the latest version of XCode.
+
+`brew tap soheilbm/formulae`
+
+`brew install soheilbm/formulae/carthage-cache`
+
 - - -
 
 ### Commands
