@@ -329,11 +329,16 @@ struct Arguments {
         return libraries
     }
     
+    func fetchGitLibraries() {
+        Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage","checkout")
+    }
+    
     func copyToCache(_ libraries: Set<Library>) {
         for i in libraries {
             let newPath = carthagePath + "/\(kCarthage)/Build/iOS"
             File.remove(path: newPath)
             
+            Debugger.printout("Building library \(i.name)")
             Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "build","\(i.name)","--platform","ios")
     
             let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
@@ -408,10 +413,14 @@ struct main {
         guard let arguments = Arguments(args) else {return}
         let cartFiles = Set(arguments.getLibrariesFromCartfileResolve())
         let cacheFiles = Set(arguments.getLibraryFromCache())
-        
+
         let missingCachFiles = cartFiles.subtracting(cacheFiles)
         
-        arguments.copyToCache(missingCachFiles)
+        if missingCachFiles.count > 0 {
+            arguments.fetchGitLibraries()
+            arguments.copyToCache(missingCachFiles)
+        }
+        
         arguments.copyFromCacheToCarthage(cartFiles)
     }
 }
