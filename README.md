@@ -1,4 +1,4 @@
-# Carthage Cache (beta)
+# Carthage Cache 
 Alternate solution for Carthage Caching.
 
 ### Installation
