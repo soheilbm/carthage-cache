@@ -4,7 +4,7 @@ Alternate solution for Carthage Caching.
 #### Installation
 ##### Homebrew Option
 `brew tap soheilbm/formulae`
-`brew install carthage-cache`
+`brew install soheilbm/formulae/carthage-cache`
 
 ##### Git Clone Option
 `git clone git@github.com:soheilbm/carthage-cache.git`
