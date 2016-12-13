@@ -1,9 +1,9 @@
-## Carthage Cache
+# Carthage Cache (beta)
 Alternate solution for Carthage Caching.
 
-#### Installation
+### Installation
 
-##### Git Clone Option
+#### Git Clone Option
 `git clone git@github.com:soheilbm/carthage-cache.git`
 
 `cd carthage-cache`
@@ -12,14 +12,14 @@ Alternate solution for Carthage Caching.
 
 `make install copy clean`
 
-##### Homebrew Option
+#### Homebrew Option
 `brew tap soheilbm/formulae`
 
 `brew install soheilbm/formulae/carthage-cache`
 
 - - -
 
-#### Commands
+### Commands
 ``` bash
 ./carthage-cache help
 ```
