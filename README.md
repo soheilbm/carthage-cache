@@ -29,10 +29,11 @@ Alternate solution for Carthage Caching.
 -   **-x**    *XCode version (by default uses `llvm-gcc -v`). e.g 8.0.0*
 -   **-l**    *Swift version (by default uses `xcrun swift -version`). e.g 3.0*
 -   **-s**    *Shell environment (by default will use /usr/bin/env)*
--   **-f**    *Force to rebuild and copy to caching directory*
+-   **-f**    *Force to rebuild and copy to caching directory (TODO)*
 -   **-v**    *Verbose mode*
 
 
 ### Todo
+- [ ] Fixing Force options
 - [ ] Adding test cases
 - [ ] Submitting to homebrew formula
