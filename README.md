@@ -4,27 +4,26 @@ Alternate solution for Carthage Caching.
 ### Installation
 
 #### Git Clone Option
-`git clone git@github.com:soheilbm/carthage-cache.git`
-
-`cd carthage-cache`
-
-`chmod +x carthage-cache/main.swift`
-
-`make install copy clean`
-
+```bash
+git clone git@github.com:soheilbm/carthage-cache.git`
+cd carthage-cache
+chmod +x carthage-cache/main.swift
+make install copy clean
+```
 
 #### Brew Option
 This option requires to use the latest version of XCode.
 
-`brew tap soheilbm/formulae`
-
-`brew install soheilbm/formulae/carthage-cache`
+```bash
+brew tap soheilbm/formulae
+brew install soheilbm/formulae/carthage-cache
+```
 
 - - -
 
 ### Commands
-``` bash
-./carthage-cache help
+```bash
+carthage-cache build -v
 ```
 
 - **help**     *Display general build commands and options*
