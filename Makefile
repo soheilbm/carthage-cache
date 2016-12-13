@@ -4,7 +4,6 @@ BUILD_TOOL?=xcodebuild
 XCODEFLAGS=-scheme 'carthage-cache'  \
 	-configuration Release \
 	-derivedDataPath '$(TEMPORARY_FOLDER)' \
-	OTHER_LDFLAGS=-Wl,-headerpad_max_install_names \
 	clean build
 
 
