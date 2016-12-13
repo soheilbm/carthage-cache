@@ -1,20 +1,20 @@
-## Carthage Cache
-Alternate solution for carthage cashing.
+# Carthage Cache (beta)
+Alternate solution for Carthage Caching.
 
-#### Installation
-##### Homebrew Option
-`brew tap soheilbm/formulae`
-`brew install carthage-cache`
+### Installation
 
-##### Git Clone Option
+#### Git Clone Option
 `git clone git@github.com:soheilbm/carthage-cache.git`
+
 `cd carthage-cache`
+
 `chmod +x carthage-cache/main.swift`
-`./carthage-cache/main.swift`
+
+`make install copy clean`
 
 - - -
 
-#### Commands
+### Commands
 ``` bash
 ./carthage-cache help
 ```
@@ -29,10 +29,11 @@ Alternate solution for carthage cashing.
 -   **-x**    *XCode version (by default uses `llvm-gcc -v`). e.g 8.0.0*
 -   **-l**    *Swift version (by default uses `xcrun swift -version`). e.g 3.0*
 -   **-s**    *Shell environment (by default will use /usr/bin/env)*
--   **-f**    *Force to rebuild and copy to caching directory*
+-   **-f**    *Force to rebuild and copy to caching directory (TODO)*
 -   **-v**    *Verbose mode*
 
 
 ### Todo
+- [ ] Fixing Force options
 - [ ] Adding test cases
 - [ ] Submitting to homebrew formula
