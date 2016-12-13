@@ -181,7 +181,7 @@ struct Arguments {
             
             return nil
         }
-        
+    
         guard let _ = newArgs.index(of: "build") else {
             Arguments.invalidArgument()
             return nil
@@ -339,7 +339,7 @@ struct Arguments {
             File.remove(path: newPath)
             
             Debugger.printout("Building library \(i.name)")
-            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "build","\(i.name)","--platform","ios")
+            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "build","\(i.name)","--no-use-binaries","--platform","ios")
     
             let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name
