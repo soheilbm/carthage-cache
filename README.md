@@ -36,7 +36,7 @@ carthage-cache build -v
 -   **-x**    *XCode version (by default uses `llvm-gcc -v`). e.g 8.0.0*
 -   **-l**    *Swift version (by default uses `xcrun swift -version`). e.g 3.0*
 -   **-s**    *Shell environment (by default will use /usr/bin/env)*
--   **-f**    *Force to rebuild and copy to caching directory (TODO)*
+-   **-f**    *Force to rebuild and copy to caching directory*
 -   **-v**    *Verbose mode*
 
 
@@ -44,3 +44,4 @@ carthage-cache build -v
 - [ ] Fixing Force options
 - [ ] Adding test cases
 - [ ] Submitting to homebrew formula
+- [ ] TODO for option -x and -l
