@@ -22,3 +22,7 @@ clean:
 copy:
 	echo "copying item"
 	cp -f "$(TEMPORARY_FOLDER)/Build/Products/Release/carthage-cache" "$(BINARIES_FOLDER)/carthage-cache"
+
+delete:
+	echo "Deleting old binary"
+	rm -rf "$(BINARIES_FOLDER)/carthage-cache"
