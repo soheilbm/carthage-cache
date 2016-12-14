@@ -1,8 +1,0 @@
-exclude:
-  - Pods
-  - Tests
-
-except:
-  - trailing-whitespace
-  - brace-style
-  - upper-camel-case
