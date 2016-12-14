@@ -1,0 +1,6 @@
+framework module AES {
+  umbrella header "AES.h"
+
+  export *
+  module * { export * }
+}

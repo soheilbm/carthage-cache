@@ -1,0 +1,10 @@
+framework module Swiftline {
+  umbrella header "Pods-PGCommands-Swiftline-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module Swiftline.Swift {
+    header "Swiftline-Swift.h"
+}

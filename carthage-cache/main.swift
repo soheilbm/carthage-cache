@@ -234,7 +234,8 @@ struct Arguments {
             Arguments.updateAllLibraries()
         }
         
-        if Arguments.cacheDirExist("iOS",swiftVersion: "3.0", xcodeVersion: "8.0.0") == false {
+        if Arguments.cacheDirExist(platform,swiftVersion: swiftVersion, xcodeVersion: xcodeVersion) == false {
+            Debugger.printout("Cannot create cache directory", type: .error)
             return nil
         }
     }
@@ -325,17 +326,13 @@ struct Arguments {
         return libraries
     }
     
-    func fetchGitLibraries() {
-        Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage","checkout","--no-use-binaries")
-    }
-    
     func copyToCache(_ libraries: Set<Library>) {
         for i in libraries {
             let newPath = carthagePath + "/\(kCarthage)/Build/iOS"
             File.remove(path: newPath)
             
             Debugger.printout("Building library \(i.name)")
-            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "build","\(i.name)","--platform","ios")
+            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "bootstrap","\(i.name)","--verbose","--platform","ios")
     
             let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name
@@ -343,9 +340,9 @@ struct Arguments {
             let pathWithVersion = dataPath.appendingPathComponent(i.version).absoluteString.replacingOccurrences(of: "file://", with: "")
             
             let _ = File.remove(path: pathWithVersion)
-            let _ = File.createDir(dataPath)
-            
-            let _ = File.copy(path: newPath, toPath: pathWithVersion)
+            if File.copy(path: newPath, toPath: pathWithVersion) == false {
+                let _ = File.createDir(pathWithVersion)
+            }
         }
     }
     
@@ -391,7 +388,7 @@ struct Arguments {
     static func showHelp() {
         Debugger.printout("Available Commands:", type: .success)
         Debugger.printout("  help          Display general build commands and options")
-        Debugger.printout("  build         Copy framework from cache or build a new one if doesn't exist")
+        Debugger.printout("  build         Copy framework from cache or build a new one from Cartfile.Resolve if doesn't exist")
         Debugger.printout("  version       Display current version\n")
         
         Debugger.printout("Options:", type: .success)
@@ -409,15 +406,22 @@ struct main {
         guard let arguments = Arguments(args) else {return}
         let cartFiles = Set(arguments.getLibrariesFromCartfileResolve())
         let cacheFiles = Set(arguments.getLibraryFromCache())
-
+        
         let missingCachFiles = cartFiles.subtracting(cacheFiles)
         
-        if missingCachFiles.count > 0 {
-            arguments.fetchGitLibraries()
-            arguments.copyToCache(missingCachFiles)
+        if arguments.force {
+            Debugger.printout("Building and copying Libraries to cache 🛠 \n", type: .standard)
+            arguments.copyToCache(cartFiles)
+        } else {
+            if missingCachFiles.count > 0 {
+                Debugger.printout("Building and copying Libraries to cache 🛠 \n", type: .standard)
+                arguments.copyToCache(missingCachFiles)
+            }
         }
         
+        Debugger.printout("Copying framework from cache to carthage build 💾", type: .standard)
         arguments.copyFromCacheToCarthage(cartFiles)
+        Debugger.printout("Done! 🍻", type: .success)
     }
 }
 
