@@ -1,5 +1,5 @@
 # Carthage Cache 
-Alternate solution for Carthage Caching. Carthage-cache needs ***Cartfile.resolve*** in order to work.
+Alternate solution for Carthage Caching. Carthage-cache needs ***Cartfile.resolve*** in order to work. Carthage cache doesnt update your library. It only build and cache the version that exist in your cartfile.resolve file. 
 
 ### Installation
 
@@ -41,7 +41,5 @@ carthage-cache build -v
 
 
 ### Todo
-- [ ] Fixing Force options
 - [ ] Adding test cases
 - [ ] Submitting to homebrew formula
-- [ ] TODO for option -x and -l

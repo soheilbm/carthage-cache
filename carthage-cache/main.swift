@@ -14,7 +14,7 @@ let kCartfile         = "Cartfile"
 let kCarthage         = "Carthage"
 let kCartfileResolved = "Cartfile.resolved"
 let kCarthageCacheDir = "carthage-cache"
-let kVersion          = "v0.1.7"
+let kVersion          = "v0.1.9"
 
 struct Debugger {
     enum PrintType: String {
@@ -157,8 +157,34 @@ struct Arguments {
     var verbose: Bool = false
     var force: Bool = false
     var carthagePath: String
-    var xcodeVersion: String = "8.0.0"
-    var swiftVersion: String = "3.0"
+    var xcodeVersion: String = {
+        let command = Command.run(args: "llvm-gcc", "-v")
+        var output = command.output.first
+        if output == nil  { output = command.error.first }
+        
+        if let output = output {
+            let firstString = output.components(separatedBy: "\n")[0]
+            let strArray = firstString.components(separatedBy: " ")
+            let version = strArray[3]
+            return version
+        }
+        return ""
+    }()
+    
+    var swiftVersion: String = {
+        let command = Command.run(args: "xcrun", "swift", "-version")
+        var output = command.output.first
+        if output == nil  { output = command.error.first }
+        
+        if let output = output {
+            let firstString = output.components(separatedBy: "\n")[0]
+            let strArray = firstString.components(separatedBy: " ")
+            let version = strArray[3]
+            return version
+        }
+        return ""
+    }()
+    
     var platform: String = "iOS"
     var shellEnvironment: String = "/usr/bin/env"
     var libraries: [Library]?
@@ -229,6 +255,11 @@ struct Arguments {
             newArgs.remove(at: index)
         }
         
+        if let index = newArgs.index(of: "-p"), let i = newArgs.index(index, offsetBy: 1, limitedBy: 1) {
+            platform = newArgs[i]
+            newArgs.remove(at: i)
+            newArgs.remove(at: index)
+        }
         
         if Arguments.resolveFileExist(path: carthagePath) == false {
             Arguments.updateAllLibraries()
@@ -241,7 +272,7 @@ struct Arguments {
     }
     
     static func updateAllLibraries() {
-        Command.run(args: "carthage", "update","--platform","ios")
+        Command.run(args: "carthage", "update","--platform")
     }
     
     func getLibrariesFromCartfileResolve() -> [Library] {
@@ -328,18 +359,20 @@ struct Arguments {
     
     func copyToCache(_ libraries: Set<Library>) {
         for i in libraries {
-            let newPath = carthagePath + "/\(kCarthage)/Build/iOS"
+            let newPath = carthagePath + "/\(kCarthage)/Build/\(platform)"
             File.remove(path: newPath)
             
             Debugger.printout("Building library \(i.name)")
-            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "bootstrap","\(i.name)","--verbose","--platform","ios")
+            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "bootstrap","\(i.name)","--verbose","--platform", platform)
     
             let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name
             let dataPath = documentsDirectory.appendingPathComponent(path)
             let pathWithVersion = dataPath.appendingPathComponent(i.version).absoluteString.replacingOccurrences(of: "file://", with: "")
             
+            let _ = File.createDir(dataPath.absoluteString.replacingOccurrences(of: "file://", with: ""))
             let _ = File.remove(path: pathWithVersion)
+            
             if File.copy(path: newPath, toPath: pathWithVersion) == false {
                 let _ = File.createDir(pathWithVersion)
             }
@@ -347,15 +380,17 @@ struct Arguments {
     }
     
     func copyFromCacheToCarthage(_ libraries: Set<Library>) {
-        let newPath = carthagePath + "/\(kCarthage)/Build/iOS"
+        let newPath = carthagePath + "/\(kCarthage)/Build/\(platform)"
         File.remove(path: newPath)
         let _ = File.createDir(newPath)
         
         for i in libraries {
+            Debugger.printout("Copying library \(i.name) from cache")
             let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name + "/" + i.version + "/."
             let dataPath = documentsDirectory.appendingPathComponent(path)
             let pathWithVersion = dataPath.absoluteString.replacingOccurrences(of: "file://", with: "")
+            
             
             Command.run(launchPath: shellEnvironment, verbose: verbose, args: "cp","-rf",pathWithVersion,newPath)
         }
@@ -397,6 +432,7 @@ struct Arguments {
         Debugger.printout("  -l            Swift version (by default uses `xcrun swift -version`). e.g 3.0")
         Debugger.printout("  -s            Shell environment (by default will use /usr/bin/env)")
         Debugger.printout("  -f            Force to rebuild and copy to caching directory")
+        Debugger.printout("  -p            platform (by default uses iOS). Supported Type are iOS, Mac, tvOS, watchOS.")
         Debugger.printout("  -v            Verbose mode\n")
     }
 }
@@ -410,7 +446,7 @@ struct main {
         let missingCachFiles = cartFiles.subtracting(cacheFiles)
         
         if arguments.force {
-            Debugger.printout("Building and copying Libraries to cache 🛠 \n", type: .standard)
+            Debugger.printout("Force Building and copying Libraries to cache 🛠 \n", type: .standard)
             arguments.copyToCache(cartFiles)
         } else {
             if missingCachFiles.count > 0 {
@@ -424,5 +460,6 @@ struct main {
         Debugger.printout("Done! 🍻", type: .success)
     }
 }
+
 
 _ = main(args: CommandLine.arguments)
