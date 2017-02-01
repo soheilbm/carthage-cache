@@ -1,7 +1,7 @@
 # Carthage Cache 
 Alternate solution for Carthage Caching. Carthage-cache needs ***Cartfile.resolve*** in order to work. Carthage cache doesnt update your library. It only build and cache the version that exist in your cartfile.resolve file. 
 
-![screenshot](https://github.com/soheilbm/carthage-cache/master/Assets/Sample.gif?raw=true)
+![screenshot](https://raw.githubusercontent.com/soheilbm/carthage-cache/master/Assets/Sample.gif)
 
 
 ### Installation
