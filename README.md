@@ -24,7 +24,13 @@ brew install soheilbm/formulae/carthage-cache
 
 - - -
 
+### Requirement
+Carthage cache needs `Cartfile.resolve` in order to work. It look at the branch or tag version from resolve file and cache them. If you do not have the cartfile.resolve, make sure you run the `carthage update` first then run `carthage-cache build`.
+
+- - -
 ### Commands
+For verbose mode you can use `-v`
+
 ```bash
 carthage-cache build -v
 ```
