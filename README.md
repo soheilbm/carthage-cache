@@ -22,10 +22,9 @@ brew tap soheilbm/formulae
 brew install soheilbm/formulae/carthage-cache
 ```
 
-- - -
 
 ### Requirement
-Carthage cache needs `Cartfile.resolve` in order to work. It look at the branch or tag version from resolve file and cache them. If you do not have the cartfile.resolve, make sure you run the `carthage update` first then run `carthage-cache build`.
+Carthage cache needs **`Cartfile.resolve`** in order to work. Carthage-Cache looks at the branch or tag version from resolve file and cache them. If you do not have the `.resolve` file make sure you run the `carthage update` first then run **`carthage-cache build`**.
 
 - - -
 ### Commands
@@ -52,3 +51,4 @@ carthage-cache build -v
 ### Todo
 - [ ] Adding test cases
 - [ ] Submitting to homebrew formula
+- [ ] Make the caching return 1 in bach if it failed to build a library
