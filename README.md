@@ -49,6 +49,7 @@ carthage-cache build -v
 
 #### Debugging:
 The cache files are store in `/Users/USERNAME/Library/Caches/carthage-cache/`
+
 Cache files will store in folder based on xcode version and swift version. For instance, if you are using xcode 8 with swift 3, your folder will be like `X8.0.0_S3.0`.
 
 ### Todo
