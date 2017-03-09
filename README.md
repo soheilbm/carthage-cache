@@ -1,10 +1,19 @@
 # Carthage Cache 
+
+[![Swift 3.0](https://img.shields.io/badge/Swift-3.0-orange.svg?style=flat)](https://developer.apple.com/swift/)
+[![Xcode 8.0+](https://img.shields.io/badge/Xcode-8.0+-blue.svg?style=flat)](https://developer.apple.com/swift/)
+![License MIT](https://img.shields.io/github/license/mashape/apistatus.svg)
+
 Alternate solution for Carthage Caching. Carthage-cache needs ***Cartfile.resolve*** in order to work. Carthage cache doesnt update your library. It only build and cache the version that exist in your cartfile.resolve file. 
 
 ![screenshot](https://raw.githubusercontent.com/soheilbm/carthage-cache/master/Assets/Sample.gif)
 
 
 ### Installation
+
+### Requirements
+- Xcode 8.0+
+- Swift 3+
 
 #### Git Clone Option
 ```bash
