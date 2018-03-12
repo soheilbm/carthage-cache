@@ -14,7 +14,7 @@ let kCartfile         = "Cartfile"
 let kCarthage         = "Carthage"
 let kCartfileResolved = "Cartfile.resolved"
 let kCarthageCacheDir = "carthage-cache"
-let kVersion          = "v0.1.9"
+let kVersion          = "v0.1.11"
 
 struct Debugger {
     enum PrintType: String {
@@ -113,6 +113,16 @@ struct File {
         return FileManager.default.fileExists(atPath: path)
     }
     
+    static func directoryConstainsFile(path: String) -> Bool {
+        do {
+            let contents = try FileManager.default.contentsOfDirectory(atPath: path)
+                .filter{ $0 != ".DS_Store" && $0 != "" }
+            return contents.count > 0
+        } catch {
+            return false
+        }
+    }
+    
     static func read (path: String, encoding: String.Encoding = String.Encoding.utf8) -> String? {
         if File.exists(path: path) {
             return try? String.init(contentsOfFile: path, encoding: encoding)
@@ -156,6 +166,7 @@ struct Library: Hashable {
 struct Arguments {
     var verbose: Bool = false
     var force: Bool = false
+    var useSSH: Bool = true
     var carthagePath: String
     var xcodeVersion: String = {
         let command = Command.run(args: "llvm-gcc", "-v")
@@ -220,6 +231,11 @@ struct Arguments {
             newArgs.remove(at: i)
         }
         
+        if let i = newArgs.index(of: "-u") {
+            useSSH = true
+            newArgs.remove(at: i)
+        }
+        
         if let i = newArgs.index(of: "-f") {
             force = true
             newArgs.remove(at: i)
@@ -232,7 +248,7 @@ struct Arguments {
                 path = last
             }
             
-            if let last = path.characters.last, last == "/" {
+            if let last = path.last, last == "/" {
                 path = path.substring(to: path.index(before: path.endIndex))
             }
             
@@ -261,7 +277,7 @@ struct Arguments {
             newArgs.remove(at: index)
         }
         
-        if Arguments.resolveFileExist(path: carthagePath) == false {
+        if Arguments.cartfileExist(path: carthagePath) == false {
             Arguments.updateAllLibraries()
         }
         
@@ -344,8 +360,8 @@ struct Arguments {
                             
                             if let index = array.index(of: "") { array.remove(at: index) }
                             if let index = array.index(of: ".DS_Store") { array.remove(at: index) }
-                            
-                            if array.count >= 2 {
+
+                            if array.count >= 2 && File.directoryConstainsFile(path: name.path) {
                                 libraries.append(Library(name: array[0], version: array[1]))
                             }
                         }
@@ -357,13 +373,17 @@ struct Arguments {
         return libraries
     }
     
+    func updateCartfileResolved() {
+        Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "update","--no-build", useSSH == true ? "--use-ssh" : "")
+    }
+    
     func copyToCache(_ libraries: Set<Library>) {
         for i in libraries {
             let newPath = carthagePath + "/\(kCarthage)/Build/\(platform)"
             File.remove(path: newPath)
             
             Debugger.printout("Building library \(i.name)")
-            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "bootstrap","\(i.name)","--verbose","--platform", platform)
+            Command.run(launchPath: shellEnvironment, verbose: verbose, args: "carthage", "bootstrap","\(i.name)","--verbose","--platform", platform, useSSH == true ? "--use-ssh" : "")
     
             let documentsDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             let path = kCarthageCacheDir + "/" + "X\(xcodeVersion)_S\(swiftVersion)" + "/" + platform + "/" + i.name
@@ -404,6 +424,16 @@ struct Arguments {
         return File.createDir(dataPath)
     }
     
+    static func cartfileExist(path: String) -> Bool {
+        let newPath = path + "/\(kCartfile)"
+        if File.exists(path: newPath) == false {
+            Debugger.printout("Wrong path to \(kCartfile)!\n", type: .error)
+            return false
+        }
+        
+        return true
+    }
+    
     static func resolveFileExist(path: String) -> Bool {
         let newPath = path + "/\(kCartfileResolved)"
 
@@ -433,6 +463,7 @@ struct Arguments {
         Debugger.printout("  -s            Shell environment (by default will use /usr/bin/env)")
         Debugger.printout("  -f            Force to rebuild and copy to caching directory")
         Debugger.printout("  -p            platform (by default uses iOS). Supported Type are iOS, Mac, tvOS, watchOS.")
+        Debugger.printout("  -n            Not Use --use-ssh option(Default yes)")
         Debugger.printout("  -v            Verbose mode\n")
     }
 }
@@ -440,6 +471,7 @@ struct Arguments {
 struct main {
     init(args:Array<String>) {
         guard let arguments = Arguments(args) else {return}
+        arguments.updateCartfileResolved()
         let cartFiles = Set(arguments.getLibrariesFromCartfileResolve())
         let cacheFiles = Set(arguments.getLibraryFromCache())
         
